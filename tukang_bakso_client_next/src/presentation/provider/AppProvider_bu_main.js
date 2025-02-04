@@ -112,7 +112,7 @@ function AppProvider({ children }) {
 
   function initUserLocation() {
     if (!navigator.geolocation) {
-      console.warn("Geolocation is not supported by this browser.");
+      console.log("Your system does not support Geolocation");
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -121,25 +121,21 @@ function AppProvider({ children }) {
     );
   }
 
-  const locationResolveSuccessfully = useCallback(
-    (data) => {
-      setHasAccessLocation(true);
-      const { latitude, longitude } = data.coords;
-
-      if (socketRef.current) {
-        socketRef.current.emit("join", {
-          coord: { latitude, longitude },
-          role: currentRole,
-          name: userName,
-        });
-      }
-
-      console.log("Location fetched successfully:", latitude, longitude);
-      router.push("/map");
-    },
-    [currentRole, userName, router]
-  );
-
+  function locationResolveSuccessfully(data) {
+    setHasAccessLocation(true);
+    const latitude = data.coords.latitude;
+    const longitude = data.coords.longitude;
+    socketRef.current.emit("join", {
+      coord: { latitude, longitude },
+      role: currentRole,
+      name: userName,
+    });
+    console.log("Location fetched successfully");
+    console.log("currentRole: ", currentRole);
+    console.log("userName: ", userName);
+    console.log("latitude/longitude: ", latitude + longitude);
+    router.push("/map");
+  }
 
   const locationResolveError = useCallback((error) => {
     const errorMessages = {
@@ -151,10 +147,11 @@ function AppProvider({ children }) {
     console.warn(errorMessages[error.code] || "Unknown error occurred.");
   }, []);
 
-  const closeApp = useCallback(() => {
+  function closeApp() {
+    // navigator.geolocation.clearWatch(watchLocation.current);
     disconnectSocket();
     router.push("/");
-  }, [disconnectSocket, router]);
+  }
 
   return (
     <Context.Provider
